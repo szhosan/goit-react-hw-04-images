@@ -1,8 +1,8 @@
 {
-  "name": "react-homework-template",
+  "name": "react-hw-4-hooks-image-finder",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://szhosan.github.io/goit-react-hw-03-image-finder/",
+  "homepage": "https://szhosan.github.io/goit-react-hw-04-image/",
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.3",
     "@testing-library/react": "^12.1.4",
