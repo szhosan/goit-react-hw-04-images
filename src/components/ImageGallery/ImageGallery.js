@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import s from './ImageGallery.module.css';
 import PhotoApiService from '../PhotoService/PhotoService';
 import ImageGalleryItem from '../ImageGalleryItem/ImageGalleryItem';
@@ -15,19 +15,18 @@ const Status = {
   REJECTED: 'rejected',
 };
 
-class ImageGallery extends Component {
-  state = {
-    galleryItems: [],
-    status: Status.IDLE,
-    loadNextPage: false,
-    canLoadMore: false,
-    showModal: false,
-    modalImageID: null,
-  };
+function ImageGallery({ searchQuery }) {
+  const [galleryItems, setGalleryItems] = useState([]);
+  const [status, setStatus] = useState(Status.IDLE);
+  const [loadNextPage, setLoadNextPage] = useState(false);
+  const [canLoadMore, setCanLoadMore] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [modalImageID, setModalImageID] = useState(null);
 
-  instance = new PhotoApiService();
+  const instance = useRef(new PhotoApiService());
 
-  async componentDidMount() {
+  //componentDidMount, первая загрузка
+  useEffect(() => {
     Events.scrollEvent.register('begin', function () {
       //console.log('begin', arguments);
     });
@@ -36,38 +35,43 @@ class ImageGallery extends Component {
       //console.log('end', arguments);
     });
 
-    this.instance.searchQuery = this.props.searchQuery;
-    this.setGalleryItemsData(await this.instance.getPhotos());
-  }
-
-  async componentDidUpdate(prevProps, prevState) {
-    const prevQuery = prevProps.searchQuery;
-    const nextQuery = this.props.searchQuery;
-
-    if (prevQuery !== nextQuery) {
-      this.setState({ status: Status.PENDING });
-      this.instance.searchQuery = nextQuery;
-      this.instance.resetPage();
-      this.setGalleryItemsData(await this.instance.getPhotos(), false);
+    async function fetch() {
+      instance.current.searchQuery = searchQuery;
+      setGalleryItemsData(await instance.current.getPhotos());
     }
-    if (this.state.loadNextPage) {
-      this.setState({ status: Status.PENDING, loadNextPage: false });
-      this.setGalleryItemsData(await this.instance.getPhotos(), true);
+
+    fetch();
+
+    return () => {
+      Events.scrollEvent.remove('begin');
+      Events.scrollEvent.remove('end');
+    };
+  }, []);
+
+  useEffect(() => {
+    setStatus(Status.PENDING);
+    instance.current.searchQuery = searchQuery;
+    instance.current.resetPage();
+    async function fetch() {
+      setGalleryItemsData(await instance.current.getPhotos(), false);
     }
-  }
+    fetch();
+  }, [searchQuery]);
 
-  componentWillUnmount() {
-    Events.scrollEvent.remove('begin');
-    Events.scrollEvent.remove('end');
-  }
+  useEffect(() => {
+    if (!loadNextPage) {
+      return;
+    }
+    setStatus(Status.PENDING);
+    async function fetch() {
+      setGalleryItemsData(await instance.current.getPhotos(), true);
+    }
+    fetch();
+  }, [loadNextPage]);
 
-  toggleModal = () => {
-    this.setState(({ showModal }) => ({ showModal: !showModal }));
-  };
-
-  setGalleryItemsData({ data }, nextPageLoading) {
+  function setGalleryItemsData({ data }, nextPageLoading) {
     if (data.totalHits === 0) {
-      this.setState({ status: Status.REJECTED });
+      setStatus(Status.REJECTED);
       return;
     }
     const result = data.hits.map(
@@ -80,87 +84,81 @@ class ImageGallery extends Component {
         };
       }
     );
-    const canLoadNextPage = !this.instance.areAllRequestedPhotosShown();
+
+    const canLoadNextPage = !instance.current.areAllRequestedPhotosShown();
     if (nextPageLoading) {
-      this.setState(prevState => {
-        return {
-          galleryItems: [...prevState.galleryItems, ...result],
-          status: Status.RESOLVED,
-          canLoadMore: canLoadNextPage,
-          loadNextPage: false,
-        };
-      });
+      setGalleryItems(prevItems => [...prevItems, ...result]);
+      setStatus(Status.RESOLVED);
+      setCanLoadMore(canLoadNextPage);
+      setLoadNextPage(false);
       return;
     }
-    this.setState({
-      galleryItems: result,
-      status: Status.RESOLVED,
-      canLoadMore: canLoadNextPage,
-      loadNextPage: false,
-    });
+    setGalleryItems(result);
+    setStatus(Status.RESOLVED);
+    setCanLoadMore(canLoadNextPage);
+    setLoadNextPage(false);
   }
 
-  setNextPage = () => {
-    this.instance.incrementPage();
-    this.setState({ loadNextPage: true });
+  const setNextPage = () => {
+    instance.current.incrementPage();
+    setLoadNextPage(true);
     scroll.scrollToBottom();
   };
 
-  onGalleryClick = id => {
-    this.setState({ modalImageID: id });
-    this.toggleModal();
+  const onGalleryClick = id => {
+    setModalImageID(id);
+    toggleModal();
   };
 
-  setModalImageURL = () => {
-    if (this.setModalImageURL) {
-      const galleryItem = this.state.galleryItems.find(
-        item => item.id === this.state.modalImageID
-      );
+  const toggleModal = () => {
+    setShowModal(prevValue => !prevValue);
+  };
+
+  const setModalImageURL = () => {
+    if (setModalImageURL) {
+      const galleryItem = galleryItems.find(item => item.id === modalImageID);
       return galleryItem;
     }
   };
 
-  render() {
-    const { status, showModal, galleryItems, canLoadMore } = this.state;
-    return (
-      <>
-        <ul className={s.ImageGallery}>
-          {galleryItems.map(({ id, webformatURL, tags }) => {
-            return (
-              <ImageGalleryItem
-                key={id}
-                id={id}
-                webformatURL={webformatURL}
-                tags={tags}
-                onItemClick={this.onGalleryClick}
-              />
-            );
-          })}
-        </ul>
+  return (
+    <>
+      <ul className={s.ImageGallery}>
+        {galleryItems.map(({ id, webformatURL, tags }) => {
+          return (
+            <ImageGalleryItem
+              key={id}
+              id={id}
+              webformatURL={webformatURL}
+              tags={tags}
+              onItemClick={onGalleryClick}
+            />
+          );
+        })}
+      </ul>
 
-        {status === Status.REJECTED &&
-          Notify.warning(
-            `There is no photos on your search query: ${this.props.searchQuery}`
-          )}
-        {showModal && (
-          <Modal
-            imageURL={this.setModalImageURL().largeImageURL}
-            imageAlt={this.setModalImageURL().tags}
-            onClose={this.toggleModal}
-          />
+      {status === Status.REJECTED &&
+        Notify.warning(
+          `There is no photos on your search query: ${searchQuery}`
         )}
+      {showModal && (
+        <Modal
+          imageURL={setModalImageURL().largeImageURL}
+          imageAlt={setModalImageURL().tags}
+          onClose={toggleModal}
+        />
+      )}
 
-        <div className={s.footerContainer}>
-          {canLoadMore && status !== Status.PENDING && (
-            <Button onClick={this.setNextPage} />
-          )}
-          {status === Status.PENDING && (
-            <ThreeDots color="#3f51b5" ariaLabel="loading" />
-          )}
-        </div>
-      </>
-    );
-  }
+      <div className={s.footerContainer}>
+        {canLoadMore && status !== Status.PENDING && (
+          <Button onClick={setNextPage} />
+        )}
+        {status === Status.PENDING && (
+          <ThreeDots color="#3f51b5" ariaLabel="loading" />
+        )}
+      </div>
+    </>
+  );
 }
 
 export default ImageGallery;
