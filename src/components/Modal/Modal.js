@@ -10,6 +10,7 @@ export default function Modal({ imageURL, imageAlt, onClose }) {
     return () => {
       window.removeEventListener('keydown', handleClose);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleClose = e => {

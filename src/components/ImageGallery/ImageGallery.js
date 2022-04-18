@@ -45,6 +45,7 @@ function ImageGallery({ searchQuery }) {
       Events.scrollEvent.remove('begin');
       Events.scrollEvent.remove('end');
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
