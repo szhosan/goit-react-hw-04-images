@@ -25,7 +25,6 @@ function ImageGallery({ searchQuery }) {
 
   const instance = useRef(new PhotoApiService());
 
-  //componentDidMount, первая загрузка
   useEffect(() => {
     Events.scrollEvent.register('begin', function () {
       //console.log('begin', arguments);
