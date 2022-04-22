@@ -1,12 +1,13 @@
 import { useEffect, useState, useRef } from 'react';
 import s from './ImageGallery.module.css';
-import PhotoApiService from '../PhotoService/PhotoService';
+import PhotoApiService from '../../utils/PhotoService/PhotoService';
 import ImageGalleryItem from '../ImageGalleryItem/ImageGalleryItem';
 import Button from 'components/Button/Button';
 import Modal from '../Modal/Modal';
 import { ThreeDots } from 'react-loader-spinner';
 import { Events, animateScroll as scroll } from 'react-scroll';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
+import PropTypes from 'prop-types';
 
 const Status = {
   IDLE: 'idle',
@@ -160,5 +161,7 @@ function ImageGallery({ searchQuery }) {
     </>
   );
 }
+
+ImageGallery.propTypes = { searchQuery: PropTypes.string };
 
 export default ImageGallery;
