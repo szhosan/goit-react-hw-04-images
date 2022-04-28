@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import SearchBar from './SearchBar/SearchBar';
+import SearchBar from './Searchbar/Searchbar';
 import ImageGallery from './ImageGallery/ImageGallery';
 import Modal from './Modal/Modal';
 import Button from 'components/Button/Button';
