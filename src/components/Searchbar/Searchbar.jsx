@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import s from './SearchBar.module.css';
+import s from './Searchbar.module.css';
 import PropTypes from 'prop-types';
 
 function SearchBar({ onSubmit }) {
