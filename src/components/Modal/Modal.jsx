@@ -8,6 +8,7 @@ const modalRef = document.querySelector('#modal-root');
 export default function Modal({ imageURL, imageAlt, onClose }) {
   useEffect(() => {
     window.addEventListener('keydown', handleClose);
+
     return () => {
       window.removeEventListener('keydown', handleClose);
     };
@@ -16,13 +17,13 @@ export default function Modal({ imageURL, imageAlt, onClose }) {
 
   const handleClose = e => {
     if (e.code === 'Escape') {
-      onClose(false);
+      onClose();
     }
   };
 
   const handleCloseClick = e => {
     if (e.currentTarget === e.target) {
-      onClose(false);
+      onClose();
     }
   };
 
@@ -39,5 +40,5 @@ export default function Modal({ imageURL, imageAlt, onClose }) {
 Modal.propTypes = {
   imageURL: PropTypes.string.isRequired,
   imageAlt: PropTypes.string.isRequired,
-  onClick: PropTypes.func.isRequired,
+  onClose: PropTypes.func.isRequired,
 };
