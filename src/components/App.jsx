@@ -93,6 +93,8 @@ function App() {
     setPage(prevPage => prevPage + 1);
   };
 
+  const modalImageItem = setModalImageURL(modalImageId);
+
   return (
     <>
       <SearchBar onSubmit={handleSubmit} />
@@ -107,8 +109,8 @@ function App() {
       )}
       {showModal && (
         <Modal
-          imageURL={setModalImageURL(modalImageId).largeImageURL}
-          imageAlt={setModalImageURL(modalImageId).tags}
+          imageURL={modalImageItem.largeImageURL}
+          imageAlt={modalImageItem.tags}
           onClose={toggleModal}
         />
       )}
