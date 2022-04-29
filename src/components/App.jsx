@@ -35,7 +35,10 @@ function App() {
     fetchPhotos(searchQuery, page).then(response => {
       const requestedPhotosAmount = response.data.totalHits;
       if (requestedPhotosAmount === 0) {
-        setStatus(status.REJECTED);
+        setStatus(Status.REJECTED);
+        setGalleryItems([]);
+        setCanLoadMore(false);
+        setStatus(Status.IDLE);
         Notify.failure(
           `There is no photos on your search query: ${searchQuery}`
         );
@@ -68,7 +71,6 @@ function App() {
       }
       setStatus(Status.RESOLVED);
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, page]);
 
   const handleSubmit = searchQuery => {
